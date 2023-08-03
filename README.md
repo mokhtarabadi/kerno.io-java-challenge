@@ -13,47 +13,22 @@ We place great value in education and experience; but we also recognize that tal
 
 
 ## The challenge:
-You need to build a little event/stream-powered chat backend.
+You need to build a little real-time chat backend.
 
 Here is the expected flow in a nutshell:
-- Messages flow through a Kafka broker, you capture these messages and
-	- ... place them in permanent storage 
-	- ... as well as deliver them to a redis pubsub
-- Write a websocket server that accepts **subscribe** events and:
-	- ... returns the last N messages from permanent storage
-	- ... and returns messages in real time from redis pubsub from the corresponding channel
+- A WSServer accepts websocket connections from clients
+	- Clients can subscribe to channels (see below)
+		- They should receive a sorted list of message history + real-time messages
+	- Clients can send messages to a given channel
+		- Messages need to be placed in persistent storage
+		- Messages need to be distributed to the channel subscribers
 
-You are free to structure the projects, choose frameworks and/or libraries as you see fit to deliver on this project. Also feel free to use any of the databases provided in the docker-compose file or add your own choice to it.
+You are free to structure the projects, choose frameworks and/or libraries as you see fit to deliver on this project. Also feel free to use any of the infrastructure pieces provided in the docker-compose file or add your own choices to it. It does have to work with a simple `docker-compose up` tho.
 
+We will be evaluating data structures, synchronization, resiliency and performance strategies.
 
-### Visual guideline
-Here's a little example flow in case you need a little push to get going:
-
-**WSServer flow:**
-```mermaid
-sequenceDiagram
-WSClient ->> WSServer: { command: 'subscribe', channel: '#kerno-challenge' }
-WSServer -->> Database: getMessages(channel)
-WSServer -->> PubSub: subscribe(channel)
-WSServer -->> WSServer: 
-WSServer ->> WSClient: [messages]
-```
-
-**StreamWorker flow:**
-```mermaid
-sequenceDiagram
-Worker ->> Kafka: subscribe(channel)
-Kafka -->> Worker: [messages]
-Worker -->> Database: insert(channel, message)
-Worker -->> PubSub: publish(channel, message)
-```
-
----
 
 ### Clone this project to get started!
 Once you are happy with it, zip it and send it to dev-challenges@kerno.io for us to review.
 
 The repository already contains a usable skeleton for the infra and the services required. Update the docker-compose file to match the initialization commands of your respective ws-server and messages-worker projects. Use Java, Kotlin or Scala at will. We are a Kotlin house, but it is not required that you use Kotlin for this challenge.
-
-If you are short on time, address the messages-worker service and let us know when you send it to us.
-We understand, we are all busy people ;)
