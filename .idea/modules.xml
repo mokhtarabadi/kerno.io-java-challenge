@@ -3,6 +3,10 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/kerno.io-java-challenge.iml" filepath="$PROJECT_DIR$/.idea/modules/kerno.io-java-challenge.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/apps/messages-worker/kerno.io-java-challenge.apps.messages-worker.main.iml" filepath="$PROJECT_DIR$/.idea/modules/apps/messages-worker/kerno.io-java-challenge.apps.messages-worker.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/apps/messages-worker/kerno.io-java-challenge.apps.messages-worker.test.iml" filepath="$PROJECT_DIR$/.idea/modules/apps/messages-worker/kerno.io-java-challenge.apps.messages-worker.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/apps/ws-server/kerno.io-java-challenge.apps.ws-server.main.iml" filepath="$PROJECT_DIR$/.idea/modules/apps/ws-server/kerno.io-java-challenge.apps.ws-server.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/apps/ws-server/kerno.io-java-challenge.apps.ws-server.test.iml" filepath="$PROJECT_DIR$/.idea/modules/apps/ws-server/kerno.io-java-challenge.apps.ws-server.test.iml" />
     </modules>
   </component>
 </project>
