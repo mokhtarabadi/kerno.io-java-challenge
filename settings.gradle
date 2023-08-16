@@ -1,0 +1,4 @@
+rootProject.name = 'kerno.io-java-challenge'
+
+include 'apps:ws-server'
+include 'apps:messages-worker'
