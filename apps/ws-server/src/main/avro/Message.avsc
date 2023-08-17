@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "Message",
+  "namespace": "com.mokhtarabadi.kafka",
+  "fields": [
+    {
+      "name": "sender",
+      "type": "string"
+    },
+    {
+      "name": "text",
+      "type": "string"
+    },
+    {
+      "name": "timestamp",
+      "type": "long"
+    }
+  ]
+}

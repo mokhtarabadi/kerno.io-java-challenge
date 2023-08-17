@@ -1,7 +1,8 @@
 package com.mokhtarabadi.wsserver.controllers;
 
 import com.mokhtarabadi.wsserver.constants.TopicConstants;
-import com.mokhtarabadi.wsserver.models.Message;
+import com.mokhtarabadi.kafka.Message;
+import com.mokhtarabadi.wsserver.models.MessageObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -21,13 +22,16 @@ public class WebSocketController {
     @Autowired
     private KafkaTemplate<String, Message> kafkaTemplate;
 
-    // receive message from client
+    // receive messageObject from client
     @MessageMapping("/message/")
-    public CompletableFuture<SendResult<String, Message>> receiveMessage(@Payload Message message) {
-        message.setTimestamp(System.currentTimeMillis());
+    public CompletableFuture<SendResult<String, Message>> receiveMessage(@Payload MessageObject messageObject) {
 
-        log.info("Received message: " + message);
-        return kafkaTemplate.send(TopicConstants.WS_SERVER_TO_MESSAGES_WORKERS, message);
+        log.info("Received messageObject: " + messageObject);
+        return kafkaTemplate.send(TopicConstants.WS_SERVER_TO_MESSAGES_WORKERS, Message.newBuilder()
+                        .setSender(messageObject.getSender())
+                        .setText(messageObject.getText())
+                        .setTimestamp(System.currentTimeMillis())
+                .build());
     }
 
 }

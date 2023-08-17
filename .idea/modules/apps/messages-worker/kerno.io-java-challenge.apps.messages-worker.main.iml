@@ -4,6 +4,9 @@
     <content url="file://$MODULE_DIR$/../../../../apps/messages-worker/build/generated/sources/annotationProcessor/java/main">
       <sourceFolder url="file://$MODULE_DIR$/../../../../apps/messages-worker/build/generated/sources/annotationProcessor/java/main" isTestSource="false" generated="true" />
     </content>
+    <content url="file://$MODULE_DIR$/../../../../apps/messages-worker/src/main" dumb="true">
+      <sourceFolder url="file://$MODULE_DIR$/../../../../apps/messages-worker/src/main/avro" isTestSource="false" />
+    </content>
   </component>
   <component name="SonarLintModuleSettings">
     <option name="uniqueId" value="342c3ebb-ff83-42c8-a48e-192f6cda48c6" />
