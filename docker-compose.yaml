@@ -34,29 +34,29 @@ x-env-registry: &env_registry
   SCHEMA_REGISTRY_DEBUG: "true"
 
 services:
-  #  messages-worker:
-  #    image: gradle:jdk18
-  #    hostname: messages-worker
-  #    restart: always
-  #    working_dir: /usr/src/app
-  #    volumes: [ ./apps/messages-worker:/usr/src/app ]
-  #    command: gradle bootRun
-  #    mem_limit: 4096MB
-  #    environment:
-  #      <<: [ *env_redis, *env_mongo, *env_kafka ]
-  #
-  #  ws-server:
-  #    image: gradle:jdk18
-  #    hostname: ws-server
-  #    restart: always
-  #    ports:
-  #      - "8080:8080"
-  #    working_dir: /usr/src/app
-  #    volumes: [ ./apps/ws-server:/usr/src/app ]
-  #    command: gradle bootRun
-  #    mem_limit: 4096MB
-  #    environment:
-  #      <<: [ *env_redis, *env_kafka ]
+  messages-worker:
+    image: gradle:jdk18
+    hostname: messages-worker
+    restart: always
+    working_dir: /usr/src/app
+    volumes: [ ./apps/messages-worker:/usr/src/app ]
+    command: gradle bootRun
+    mem_limit: 4096MB
+    environment:
+       <<: [ *env_redis, *env_mongo, *env_kafka ]
+  
+  ws-server:
+    image: gradle:jdk18
+    hostname: ws-server
+    restart: always
+    ports:
+        - "8080:8080"
+    working_dir: /usr/src/app
+    volumes: [ ./apps/ws-server:/usr/src/app ]
+    command: gradle bootRun
+    mem_limit: 4096MB
+    environment:
+       <<: [ *env_redis, *env_kafka ]
 
   mongodb:
     image: bitnami/mongodb:4.2
