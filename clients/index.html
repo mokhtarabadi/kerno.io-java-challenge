@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WebSocket Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .input-field {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .message-box {
+            height: 300px;
+            width: 100%;
+            border: 1px solid #000;
+            overflow: auto;
+            margin-bottom: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <input id="usernameInput" class="input-field" type="text" placeholder="Username" />
+    <button id="connectButton">Connect</button>
+
+    <div id="channels"></div>
+    <input id="channelInput" class="input-field" type="text" placeholder="Channel" />
+    <button id="subscribeButton">Subscribe</button>
+    <button id="unsubscribeButton">Unsubscribe</button>
+
+    <div id="messageBox" class="message-box"></div>
+    <input id="messageInput" class="input-field" type="text" placeholder="Type your message" />
+    <button id="sendButton">Send</button>
+
+    <script>
+        const usernameInput = document.getElementById("usernameInput");
+        const connectButton = document.getElementById("connectButton");
+        const channels = document.getElementById("channels");
+        const channelInput = document.getElementById("channelInput");
+        const subscribeButton = document.getElementById("subscribeButton");
+        const messageBox = document.getElementById("messageBox");
+        const messageInput = document.getElementById("messageInput");
+        const sendButton = document.getElementById("sendButton");
+
+        let connected = false;
+        let username = "admin";
+        let channel = "";
+
+        const ws = new WebSocket("ws://localhost:8080");
+        ws.onmessage = function (event) {
+            const msg = JSON.parse(event.data);
+            handleMessage(msg);
+        };
+        ws.onopen = function () {
+            console.log("Connection opened");
+            connected = true;
+        };
+        ws.onclose = function () {
+            console.log("Connection closed");
+            connected = false;
+        };
+
+        connectButton.addEventListener("click", function () {
+            username = usernameInput.value;
+            ws.send(JSON.stringify({ type: "AUTH", data: { username, password: "admin" } }));
+        });
+
+        subscribeButton.addEventListener("click", function () {
+            channel = channelInput.value;
+            if (channel === "") {
+                alert("Please enter a channel.");
+            }
+            ws.send(JSON.stringify({ type: "SUBSCRIBE", data: { user: username, channel } }));
+        });
+
+        unsubscribeButton.addEventListener("click", function () {
+            ws.send(JSON.stringify({ type: "UNSUBSCRIBE", data: { channel, user: username } }));
+        });
+
+        sendButton.addEventListener("click", function () {
+            if (channel === "") {
+                alert("Please first connect.");
+                return;
+            }
+            const text = messageInput.value;
+            ws.send(JSON.stringify({ type: "MESSAGE", data: { channel, text, sender: username, acknowledge_id: "test" } }));
+        });
+
+        function handleMessage(msg) {
+            switch (msg.type) {
+                case "AUTH":
+                    console.log("Authenticated");
+                    if (msg.data.success) {
+                        ws.send(JSON.stringify({ type: "CHANNELS", data: { user: username } }));
+                    }
+                    break;
+                case "CHANNELS":
+                    console.log("Received channels");
+                    msg.data.channels.forEach(function (channel) {
+                        const p = document.createElement("p");
+                        p.textContent = channel;
+                        channels.appendChild(p);
+                    });
+                    break;
+                case "SUBSCRIBE":
+                    console.log("Subscribed");
+                    break;
+                case "UNSUBSCRIBE":
+                    console.log("Unsubscribed");
+                    // clear message box
+                    messageBox.innerHTML = "";
+                    break;
+                case "ACKNOWLEDGE":
+                    console.log("Message sent successfully");
+                    messageInput.value = "";
+                    break;
+                case "SNAPSHOT":
+                    console.log("Received snapshot");
+                    msg.data.forEach(function (message) {
+                        const p = document.createElement("p");
+                        p.textContent = message.sender + ": " + message.text + " (" + formatTimestamp(message.timestamp) + ")";
+                        messageBox.appendChild(p);
+                    });
+                    scrollToBottom(messageBox);
+                    break;
+                case "BROADCAST":
+                    console.log("Received broadcast");
+                    const p = document.createElement("p");
+                    p.textContent = msg.data.sender + ": " + msg.data.text + " (" + formatTimestamp(msg.data.timestamp) + ")";
+                    messageBox.appendChild(p);
+                    scrollToBottom(messageBox);
+                    break;
+                default:
+                    console.log("Unknown message type: " + msg.type);
+            }
+        }
+
+        function scrollToBottom(element) {
+            element.scrollTop = element.scrollHeight;
+        }
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+
+            const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            return formattedDate;
+        }
+    </script>
+</body>
+
+</html>
