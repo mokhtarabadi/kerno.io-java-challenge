@@ -1,0 +1,23 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        jcenter()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven {
+            url 'https://packages.confluent.io/maven/'
+        }
+    }
+}
+
+rootProject.name = 'kerno.io-java-challenge'
+
+include 'apps:shared-lib'
+include 'apps:ws-server'
+include 'apps:messages-worker'

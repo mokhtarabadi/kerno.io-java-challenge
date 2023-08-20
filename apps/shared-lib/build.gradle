@@ -1,0 +1,54 @@
+plugins {
+    id 'io.freefair.lombok'
+    id 'com.diffplug.spotless'
+    id 'com.github.davidmc24.gradle.plugin.avro'
+
+    id 'java-library'
+}
+
+group 'com.mokhtarabadi'
+version '1.0-SNAPSHOT'
+
+spotless {
+    java {
+        target 'src/*/java/**/*.java'
+        removeUnusedImports()
+        eclipse()
+        formatAnnotations()
+        importOrder()
+
+        licenseHeader "${licenseHeader}"
+    }
+}
+
+avro {
+    createSetters = false
+}
+
+dependencies {
+    // avro
+    api 'org.apache.avro:avro:1.11.2'
+
+    // lombok
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+
+    // cassandra
+    implementation 'com.datastax.oss:java-driver-core:4.13.0'
+    implementation 'com.datastax.oss:java-driver-query-builder:4.13.0'
+    api 'com.datastax.oss:java-driver-mapper-runtime:4.13.0'
+    annotationProcessor 'com.datastax.oss:java-driver-mapper-processor:4.13.0'
+
+    // kafka
+    implementation 'org.apache.kafka:kafka-clients:3.5.1'
+    implementation 'io.confluent:kafka-avro-serializer:7.4.0'
+
+    // redis
+    implementation 'redis.clients:jedis:4.4.3'
+
+    // other
+    implementation 'org.jetbrains:annotations:24.0.0'
+
+    // logging
+    implementation 'org.slf4j:slf4j-api:2.0.7'
+}

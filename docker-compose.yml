@@ -1,0 +1,202 @@
+version: '3.9'
+
+x-cassandra-config: &env_cassandra
+  CASSANDRA_CLUSTER_NAME: my_cluster
+  CASSANDRA_SEEDS: 172.20.0.2,172.20.0.3,172.20.0.4,172.20.0.5
+  CASSANDRA_PASSWORD: password123
+  CASSANDRA_USER: cassandra
+  CASSANDRA_NUM_TOKENS: 256
+  CASSANDRA_DATACENTER: datacenter1
+  CASSANDRA_RACK: rack1
+  CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+
+x-zookeeper-config: &env_zookeeper
+  ZOOKEEPER_CLIENT_PORT: 2181
+  ZOOKEEPER_TICK_TIME: 2000
+
+x-kafka-config: &env_kafka
+  KAFKA_BROKER_ID: 1
+  KAFKA_ZOOKEEPER_CONNECT: '172.20.0.6:2181'
+  KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+  KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://172.20.0.8:9092,PLAINTEXT_INTERNAL://localhost:19092
+  KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+x-schema-registry-config: &env_schema_registry
+  SCHEMA_REGISTRY_HOST_NAME: schema-registry
+  SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: '172.20.0.6:2181'
+  SCHEMA_REGISTRY_LISTENERS: http://172.20.0.7:8081
+  SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://172.20.0.8:9092,PLAINTEXT_INTERNAL://localhost:19092
+  SCHEMA_REGISTRY_DEBUG: 'false'
+
+x-env-redis: &env_redis
+  REDIS_ARGS: "--save 20 1 --loglevel warning --requirepass 123456"
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.1
+    container_name: zookeeper
+    environment:
+      <<: *env_zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.6
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.4.1
+    container_name: schema-registry
+    depends_on:
+      - kafka-broker-1
+    ports:
+      - "8081:8081"
+    environment:
+      <<: *env_schema_registry
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.7
+
+  kafka-broker-1:
+    image: confluentinc/cp-kafka:7.4.1
+    container_name: kafka-broker-1
+    ports:
+      - "19092:19092"
+    depends_on:
+      - zookeeper
+    environment:
+      <<: *env_kafka
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.8
+
+  kafka-init:
+    image: bitnami/kafka:3.5.1
+    working_dir: /scripts
+    command: [ "/bin/bash", "-c", "./kafka-init.sh" ]
+    environment:
+      KAFKA_BROKER_ADDRESS: 172.20.0.8:9092
+    depends_on:
+      - kafka-broker-1
+    volumes:
+      - ./scripts:/scripts
+    init: true
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.9
+
+  cassandra_seed:
+    image: bitnami/cassandra:4.1.3
+    container_name: cassandra_seed
+    environment:
+      CASSANDRA_HOST: 172.20.0.2
+      CASSANDRA_BROADCAST_ADDRESS: 172.20.0.2
+      CASSANDRA_PASSWORD_SEEDER: 'yes'
+      <<: *env_cassandra
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra_seed_data:/bitnami
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.2
+
+  cassandra_node1:
+    image: bitnami/cassandra:4.1.3
+    container_name: cassandra_node1
+    environment:
+      CASSANDRA_HOST: 172.20.0.3
+      CASSANDRA_BROADCAST_ADDRESS: 172.20.0.3
+      <<: *env_cassandra
+    volumes:
+      - cassandra_node1_data:/bitnami
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.3
+    depends_on:
+      - cassandra_seed
+
+  cassandra_node2:
+    image: bitnami/cassandra:4.1.3
+    container_name: cassandra_node2
+    environment:
+      CASSANDRA_HOST: 172.20.0.4
+      CASSANDRA_BROADCAST_ADDRESS: 172.20.0.4
+      <<: *env_cassandra
+    volumes:
+      - cassandra_node2_data:/bitnami
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.4
+    depends_on:
+      - cassandra_seed
+
+  cassandra_node3:
+    image: bitnami/cassandra:4.1.3
+    container_name: cassandra_node3
+    environment:
+      CASSANDRA_HOST: 172.20.0.5
+      CASSANDRA_BROADCAST_ADDRESS: 172.20.0.5
+      <<: *env_cassandra
+    volumes:
+      - cassandra_node3_data:/bitnami
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.5
+    depends_on:
+      - cassandra_seed
+
+  redis:
+    image: redis/redis-stack:6.2.6-v6
+    container_name: redis
+    restart: always
+    ports: [ "16379:6379" ]
+    environment:
+      <<: *env_redis
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.10
+
+  messages-worker:
+    build:
+      context: ./
+      dockerfile: ./apps/messages-worker/Dockerfile
+    container_name: messages-worker
+    restart: always
+    depends_on:
+      - cassandra_seed
+      - kafka-broker-1
+      - redis
+      - schema-registry
+    environment:
+      MESSAGES_WORKER_OPTS: -Dlogging.level=TRACE -Dredis.address=172.20.0.10 -Dredis.port=6379 -Dredis.password="123456" -Dkafka.address=172.20.0.8 -Dkafka.port=9092 -Dkafka.schema_registry_url="http://172.20.0.7:8081" -Dkafka.group_id="messages-worker" -Dcassandra.address=172.20.0.2 -Dcassandra.port=9042 -Dcassandra.username="cassandra" -Dcassandra.password="password123" -Dcassandra.datacenter="datacenter1" -Dcassandra.keyspace="chat_backend2"
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.11
+
+  ws-server:
+    build:
+      context: ./
+      dockerfile: ./apps/ws-server/Dockerfile
+    container_name: ws-server
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - messages-worker
+    environment:
+      WS_SERVER_OPTS: -Dlogging.level=TRACE -Dserver.address=172.20.0.12 -Dserver.port=8080 -Dredis.address=172.20.0.10 -Dredis.port=6379 -Dredis.password="123456" -Dkafka.address=172.20.0.8 -Dkafka.port=9092 -Dkafka.schema_registry_url="http://172.20.0.7:8081" -Dkafka.group_id="ws-server" -Dcassandra.address=172.20.0.2 -Dcassandra.port=9042 -Dcassandra.username="cassandra" -Dcassandra.password="password123" -Dcassandra.datacenter="datacenter1" -Dcassandra.keyspace="chat_backend2"
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.12
+
+volumes:
+  cassandra_seed_data:
+  cassandra_node1_data:
+  cassandra_node2_data:
+  cassandra_node3_data:
+
+networks:
+  app_net:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

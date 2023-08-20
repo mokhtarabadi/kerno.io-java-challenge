@@ -1,0 +1,53 @@
+plugins {
+    id 'io.freefair.lombok'
+    id 'com.diffplug.spotless'
+
+    id 'application'
+}
+
+group 'com.mokhtarabadi'
+version '1.0-SNAPSHOT'
+
+application {
+    mainClass = 'com.mokhtarabadi.messagesworker.App'
+}
+
+spotless {
+    java {
+        target 'src/*/java/**/*.java'
+        removeUnusedImports()
+        eclipse()
+        formatAnnotations()
+        importOrder()
+
+        licenseHeader "${licenseHeader}"
+    }
+}
+
+dependencies {
+    // shared lib
+    implementation project(':apps:shared-lib')
+
+    // lombok
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+
+    // dagger 2
+    implementation 'com.google.dagger:dagger:2.45'
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.45'
+
+    // gson
+    implementation 'com.google.code.gson:gson:2.9.0'
+
+    // config
+    implementation 'com.typesafe:config:1.4.2'
+
+    // other
+    implementation 'com.dorkbox:MessageBus:2.5'
+    implementation 'org.jetbrains:annotations:24.0.0'
+
+    // logging
+    implementation 'org.slf4j:slf4j-api:2.0.7'
+    implementation 'ch.qos.logback:logback-classic:1.4.7'
+}
+

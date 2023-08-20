@@ -1,0 +1,23 @@
+{
+  "name": "MessageEvent",
+  "namespace": "com.mokhtarabadi.sharedlib.models",
+  "type": "record",
+  "fields": [
+    {
+      "name": "sender",
+      "type": "string"
+    },
+    {
+      "name": "channel",
+      "type": "string"
+    },
+    {
+      "name": "text",
+      "type": "string"
+    },
+    {
+      "name": "timestamp",
+      "type": "long"
+    }
+  ]
+}

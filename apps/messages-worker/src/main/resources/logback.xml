@@ -1,0 +1,18 @@
+<configuration>
+    <define name="LOG_LEVEL" class="com.mokhtarabadi.messagesworker.other.TypefaceConfigPropertyDefiner">
+        <propertyName>logging.level</propertyName>
+    </define>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%red(%d{yyyy-MM-dd HH:mm:ss})  %highlight(%-5level) %red([%thread])  %boldMagenta(%logger{50})  %cyan(%msg%n)</pattern>
+        </encoder>
+    </appender>
+
+    <root level="WARN">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <logger name="com.mokhtarabadi" level="${LOG_LEVEL}"/>
+</configuration>
+
